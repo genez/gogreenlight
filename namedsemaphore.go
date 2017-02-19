@@ -44,7 +44,7 @@ func (s *namedSemaphore) Wait() bool {
 	select {
 	case <-doWaitAsync(s.c):
 		return true
-	case s.ctx.Done():
+	case <-s.ctx.Done():
 		return false
 	}
 }
@@ -55,9 +55,9 @@ func (s *namedSemaphore) WaitWithTimeout(duration time.Duration) bool {
 	select {
 	case <-doWaitAsync(s.c):
 		return true
-	case time.After(duration):
+	case <-time.After(duration):
 		return false
-	case s.ctx.Done():
+	case <-s.ctx.Done():
 		return false
 	}
 }
