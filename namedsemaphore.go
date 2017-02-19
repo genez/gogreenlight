@@ -14,22 +14,17 @@ type namedSemaphore struct {
 }
 
 func (s *namedSemaphore) Set() bool {
-	s.c.L.Lock()
-	defer s.c.L.Unlock()
-
 	if !s.set {
 		s.set = true
 		s.c.Broadcast()
 		return true
 	} else {
+		s.c.Broadcast()
 		return false
 	}
 }
 
 func (s *namedSemaphore) Unset() bool {
-	s.c.L.Lock()
-	defer s.c.L.Unlock()
-
 	if s.set {
 		s.set = false
 		return true
@@ -39,8 +34,6 @@ func (s *namedSemaphore) Unset() bool {
 }
 
 func (s *namedSemaphore) Wait() bool {
-	s.c.L.Lock()
-	defer s.c.L.Unlock()
 	select {
 	case <-doWaitAsync(s):
 		return true
@@ -50,8 +43,6 @@ func (s *namedSemaphore) Wait() bool {
 }
 
 func (s *namedSemaphore) WaitWithTimeout(duration time.Duration) bool {
-	s.c.L.Lock()
-	defer s.c.L.Unlock()
 	select {
 	case <-doWaitAsync(s):
 		return true
@@ -65,9 +56,11 @@ func (s *namedSemaphore) WaitWithTimeout(duration time.Duration) bool {
 func doWaitAsync(s *namedSemaphore) <-chan time.Time {
 	ch := make(chan time.Time)
 	go func(ns *namedSemaphore) {
-		if !ns.set {
-			ns.Wait()
+		ns.c.L.Lock()
+		for !ns.set {
+			ns.c.Wait()
 		}
+		ns.c.L.Unlock()
 		ch <- time.Now()
 	}(s)
 	return ch

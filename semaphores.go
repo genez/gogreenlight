@@ -13,8 +13,8 @@ func init() {
 	Semaphores = SemaphoreCollection{}
 }
 
-func (sc *SemaphoreCollection) Add(semaphore namedSemaphore) {
-	Semaphores[semaphore.name] = &semaphore
+func (sc *SemaphoreCollection) Add(semaphore *namedSemaphore) {
+	Semaphores[semaphore.name] = semaphore
 }
 
 func (sc *SemaphoreCollection) Get(name string) (*namedSemaphore, error) {
