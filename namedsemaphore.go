@@ -42,7 +42,7 @@ func (s *namedSemaphore) Wait() bool {
 	s.c.L.Lock()
 	defer s.c.L.Unlock()
 	select {
-	case <-doWaitAsync(s.c):
+	case <-doWaitAsync(s):
 		return true
 	case <-s.ctx.Done():
 		return false
@@ -53,7 +53,7 @@ func (s *namedSemaphore) WaitWithTimeout(duration time.Duration) bool {
 	s.c.L.Lock()
 	defer s.c.L.Unlock()
 	select {
-	case <-doWaitAsync(s.c):
+	case <-doWaitAsync(s):
 		return true
 	case <-time.After(duration):
 		return false
@@ -62,11 +62,13 @@ func (s *namedSemaphore) WaitWithTimeout(duration time.Duration) bool {
 	}
 }
 
-func doWaitAsync(cond *sync.Cond) <-chan time.Time {
+func doWaitAsync(s *namedSemaphore) <-chan time.Time {
 	ch := make(chan time.Time)
-	go func(c *sync.Cond) {
-		c.Wait()
+	go func(ns *namedSemaphore) {
+		if !ns.set {
+			ns.Wait()
+		}
 		ch <- time.Now()
-	}(cond)
+	}(s)
 	return ch
 }
