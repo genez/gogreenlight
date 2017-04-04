@@ -23,6 +23,13 @@ func (sc *SemaphoreCollection) Add(semaphore *namedSemaphore) {
 	Semaphores[semaphore.name] = semaphore
 }
 
+func (sc *SemaphoreCollection) Remove(name string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	delete(Semaphores, name)
+}
+
 func (sc *SemaphoreCollection) Get(name string) (*namedSemaphore, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()

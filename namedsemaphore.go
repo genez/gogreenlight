@@ -42,6 +42,15 @@ func (s *namedSemaphore) Wait() bool {
 	}
 }
 
+func (s *namedSemaphore) WaitWithContext(ctx context.Context) bool {
+	select {
+	case <-doWaitAsync(s):
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
 func (s *namedSemaphore) WaitWithTimeout(duration time.Duration) bool {
 	select {
 	case <-doWaitAsync(s):
